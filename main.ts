@@ -1,41 +1,57 @@
-// A working best-game-01 entry (Node 22, standard library only): the game is this directory's
-// game/ folder, plain static files a desktop browser loads offline (game/index.html and its ES
-// modules, no library and no network request), and the program hands it in. It copies game/ and
-// screenshots/ from beside this file to /output and writes /output/dossier.json, the summary the
-// judge reads, with the vendored make.fun library. A starting point, not a winner: Block Dodger, a
-// plain 2D canvas game where a paddle dodges falling blocks and catches coins, with a title screen,
-// score, lives and levels, game over and restart, flat colours and no sound. Build your own game
-// (any genre, any library you vendor under game/, or none), put your 3 or 4 PNG or JPEG screenshots
-// in screenshots/ (the first by name is the cover) and run it.
+// Low Tide — hand-in script for the best-stealth bounty (Node 22, stdlib only).
 //
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
+// What this does, in plain terms: it takes the finished game sitting next to
+// this file (game/ plus the screenshots/ folder) and hands both over to the
+// folder the grader points at, then asks the vendored make.fun helper to
+// summarise that folder into dossier.json for the judge to read.
+//
+// Run it outside the grader like this:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Inside the grader the output folder is /output unless the env var says so.
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import * as nodeFs from 'node:fs';
+import * as nodePath from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+// Where this script lives on disk — game/ and screenshots/ sit beside it.
+const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+// The grader tells us where to hand the entry in; fall back to /output.
+const destination = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in game/ or 48 MiB of game
-// files, in all, or a path under game/ over 1000 bytes: game/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    game_max_files: 993,
-    game_max_bytes: 50331648,
-    game_path_max_bytes: 1000,
-  }),
-);
+// Make sure a folder exists, creating parents as needed.
+function ensureDir(folder: string): void {
+  nodeFs.mkdirSync(folder, { recursive: true });
+}
+
+// Copy a whole folder tree, source first, target second.
+function mirrorDir(source: string, target: string): void {
+  nodeFs.cpSync(source, target, { recursive: true });
+}
+
+// The caps the scorer itself enforces — text budget plus the hard limits on
+// screenshots and on how much game/ may hold. Passing them here means this
+// script fails in exactly the places the scorer would refuse the entry.
+const dossierCaps = {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  game_max_files: 993,
+  game_max_bytes: 50331648,
+  game_path_max_bytes: 1000,
+};
+
+function handIn(): void {
+  ensureDir(destination);
+  mirrorDir(nodePath.join(repoRoot, 'game'), nodePath.join(destination, 'game'));
+  ensureDir(nodePath.join(destination, 'screenshots'));
+  const shots = nodePath.join(repoRoot, 'screenshots');
+  if (nodeFs.existsSync(shots)) {
+    mirrorDir(shots, nodePath.join(destination, 'screenshots'));
+  }
+  const dossier = buildDossier(destination, dossierCaps);
+  nodeFs.writeFileSync(nodePath.join(destination, 'dossier.json'), dossier);
+  console.log(`Low Tide handed in: game + screenshots copied to ${destination}, dossier.json written (${dossier.length} bytes) — ready for the judge.`);
+}
+
+handIn();
