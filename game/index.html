@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Low Tide — Dusk Stealth</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="1280" height="720"></canvas>
+  <div id="hud-top">
+    <div class="hud-title">LOW TIDE <span class="dim">· Level 1/3 · Dusk</span></div>
+    <div class="hud-mid">
+      <span class="pill">TIME <b id="hud-time">00:00</b></span>
+      <span class="pill">SHELLS <b id="hud-shells">0/3</b></span>
+      <span class="pill">GOAL <b id="hud-goal">Collect shells, reach the burrow</b></span>
+    </div>
+    <div class="hud-right">
+      <span id="hud-status" class="status hidden">HIDDEN</span>
+      <span class="alarm"><span class="alarm-label">ALARM</span><span class="alarm-track"><span id="hud-alarm-fill"></span></span><span id="hud-alarm-word">CALM</span></span>
+    </div>
+  </div>
+  <div id="hud-left">
+    <div class="row"><span>VISIBILITY</span><b id="hud-vis">IN SHADOW</b></div>
+    <div class="row"><span>NOISE</span><b id="hud-noise">SILENT</b></div>
+    <div class="row"><span>SPOTTED</span><b id="hud-spotted">0</b></div>
+    <div class="row"><span>TIDE</span><b id="hud-tide">RISING — 4:00</b></div>
+    <div class="roster-title">PATROL ROSTER</div>
+    <div class="row"><span>Grey Warden</span><b id="hud-warden">PATROL · 12m</b></div>
+    <div class="row"><span>Pip the Egret</span><b id="hud-egret">PATROL · 18m</b></div>
+  </div>
+  <div id="hud-legend">
+    <div class="legend-title">LEGEND</div>
+    <div><i class="sw cone"></i>Vision cone — danger</div>
+    <div><i class="sw reeds"></i>Reeds — cover</div>
+    <div><i class="sw cloud"></i>Cloud shadow — safe</div>
+    <div><i class="sw shell"></i>Shell — collect</div>
+    <div><i class="sw exit"></i>Burrow — exit</div>
+  </div>
+  <div id="hud-controls">WASD / Arrows — move &nbsp;·&nbsp; SHIFT — run (loud) &nbsp;·&nbsp; R — restart</div>
+  <div id="banner" class="hidden"></div>
+</div>
+<script src="level.js"></script>
+<script src="player.js"></script>
+<script src="guard.js"></script>
+<script src="render.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
