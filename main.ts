@@ -18,7 +18,11 @@ import { buildDossier } from './vendor/makefun-game.ts';
 const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 
 // The grader tells us where to hand the entry in; fall back to /output.
+// An explicitly empty value is a configuration mistake, not a valid folder.
 const destination = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+if (destination.trim() === '') {
+  throw new Error('Low Tide hand-in failed: MAKEFUN_OUTPUT_DIR must not be empty');
+}
 
 // Make sure a folder exists, creating parents as needed.
 function ensureDir(folder: string): void {
@@ -42,6 +46,12 @@ const dossierCaps = {
 };
 
 function handIn(): void {
+  // Fail early with a clear message instead of a bare copy error when the
+  // finished game folder is missing — the normal path is unchanged.
+  const gameDir = nodePath.join(repoRoot, 'game');
+  if (!nodeFs.existsSync(gameDir)) {
+    throw new Error(`Low Tide hand-in failed: game folder not found at ${gameDir}`);
+  }
   ensureDir(destination);
   mirrorDir(nodePath.join(repoRoot, 'game'), nodePath.join(destination, 'game'));
   ensureDir(nodePath.join(destination, 'screenshots'));
